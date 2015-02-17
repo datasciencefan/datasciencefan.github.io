@@ -1,0 +1,127 @@
+---
+title: "PML Project"
+author: "Thomas"
+date: "Thursday, February 12, 2015"
+output: html_document
+---
+
+1. Load the Data
+First we load the main libraries
+```{r Load Library, cache= TRUE, warning=FALSE}
+library(caret)
+library(kernlab)
+```
+
+Then we load the data
+```{r Load Data, cache= TRUE, warning=FALSE}
+train <- read.csv("C:/Users/Betty/Box Sync/Courses/Coursera - Practical Machine Learning/pml-training.csv")
+
+```
+
+2. Preprocessing
+Now we preprocess the data
+```{r PreProcess, cache= TRUE, warning=FALSE}
+Set <- c("user_name",
+"raw_timestamp_part_1",
+"raw_timestamp_part_2",
+"cvtd_timestamp",
+"new_window",
+"num_window",
+"roll_belt",
+"pitch_belt",
+"yaw_belt",
+"total_accel_belt",
+"gyros_belt_x",
+"gyros_belt_y",
+"gyros_belt_z",
+"accel_belt_x",
+"accel_belt_y",
+"accel_belt_z",
+"magnet_belt_x",
+"magnet_belt_y",
+"magnet_belt_z",
+"roll_arm",
+"pitch_arm",
+"yaw_arm",
+"total_accel_arm",
+"gyros_arm_x",
+"gyros_arm_y",
+"gyros_arm_z",
+"accel_arm_x",
+"accel_arm_y",
+"accel_arm_z",
+"magnet_arm_x",
+"magnet_arm_y",
+"magnet_arm_z",
+"roll_dumbbell",
+"pitch_dumbbell",
+"yaw_dumbbell",
+"total_accel_dumbbell",
+"gyros_dumbbell_x",
+"gyros_dumbbell_y",
+"gyros_dumbbell_z",
+"accel_dumbbell_x",
+"accel_dumbbell_y",
+"accel_dumbbell_z",
+"magnet_dumbbell_x",
+"magnet_dumbbell_y",
+"magnet_dumbbell_z",
+"roll_forearm",
+"pitch_forearm",
+"yaw_forearm",
+"total_accel_forearm",
+"gyros_forearm_x",
+"gyros_forearm_y",
+"gyros_forearm_z",
+"accel_forearm_x",
+"accel_forearm_y",
+"accel_forearm_z",
+"magnet_forearm_x",
+"magnet_forearm_y",
+"magnet_forearm_z",
+"classe")
+trainClean   <-  train[ ,Set]
+set.seed(224)
+inTrain = createDataPartition(trainClean$classe, p=0.60, list=FALSE)
+training = trainClean[inTrain,]
+validating = trainClean[-inTrain,]
+```
+
+3. Prediction
+Now we apply a random forest prediction method.
+The caret train function was not used since computing time was too long.
+We use the randomForest function directly.
+```{r Prediction, cache= TRUE, warning=FALSE}
+library(randomForest)
+rfModel <-randomForest(classe~.,data=training) #create the random forest model
+```
+
+Review Importance of Variables
+```{r Check Variables, cache= TRUE, warning=FALSE}
+importance(rfModel)
+varImpPlot(rfModel) #See how much each variable contributes to the model
+```
+
+4. Out of Sample Error Rate and Accuracy
+Because we are using the random forest method, an out of sample error rate is not necessary. However, we calculate the accuracy by running the model against training set B
+
+```{r Out of Sample Error, cache= TRUE, warning=FALSE}
+pred <- predict(rfModel, validating) #predict using train set B as test
+confusionMatrix(validating$classe, pred) #load confusion matrix
+```
+
+From the confusion matrix, we see that our model is very accurate with an accuracy of 0.9981
+
+
+5. Predict Using Test Set
+Now let's apply our model to the test set
+```{r Predict with Test Set, cache= TRUE, warning=FALSE}
+testing <- read.csv("C:/Users/Betty/Box Sync/Courses/Coursera - Practical Machine Learning/pml-testing.csv")
+testClean <- testing[ ,Set[-59]]
+testing <- rbind(training[100, -59] , testClean) 
+testing <- testing[-1,]
+
+predictions <- predict(rfModel,newdata=testing)
+print(predictions)
+
+```
